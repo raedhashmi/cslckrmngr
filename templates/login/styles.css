@@ -1,6 +1,124 @@
 body {
-    padding: 0;
     margin: 0;
-    background-color: #111111;
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    height: 100vh;
+    background: #0f0f0f;
+    font-family: Inter,Segoe UI,Roboto,Arial,sans-serif;
+    color: #ffffff;
+}
+
+.login-container {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
+    width: 360px;
+    background: #141414;
+    border: 1px solid #c2580280;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    text-align: center;
+    position: relative;
+}
+
+.login-box h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    margin-top: 6px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: #c25802;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.login-form input {
+    background: #0f0f0f;
+    border: 1px solid #c2580280;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.login-form input:focus {
+    border-color: #c25802;
+    box-shadow: 0 0 8px #c2580240;
+}
+
+.login-form button {
+    margin-top: 8px;
+    background: #c25802;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    color: #000;
+}
+
+.login-form button:active {
+    transform: scale(0.97);
+}
+
+.loader {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 2px;
+    font-size: 12px;
+    color: #c25802;
+}
+
+.ring {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid #c2580220;
+    border-top-color: #c25802;
+    animation: spin 1s linear infinite;
+}
+
+.error {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #be0000;
+    letter-spacing: 1px;
+}
+
+.hidden {
+    display: none;
+}
+
+.shake {
+    animation: shake 0.4s;
+    border-color: #be0000;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg) }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0) }
+    25% { transform: translateX(-4px) }
+    50% { transform: translateX(4px) }
+    75% { transform: translateX(-4px) }
+    100% { transform: translateX(0) }
 }

@@ -1,10 +1,32 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="resources/login/styles.css">
+    <title>cslckrmngr - login</title>
 </head>
 <body>
-    
+    <div class="login-container">
+        <div class="login-box">
+            <h1>cslckrmngr</h1>
+            <p class="subtitle">Secure Access</p>
+
+            <form class="login-form">
+                <input id="username" type="text" placeholder="Username" autocomplete="off">
+                <input id="password" type="password" placeholder="Password">
+                <button type="submit">LOGIN</button>
+            </form>
+
+            <div class="loader hidden">
+                <div class="ring"></div>
+                <span>AUTHENTICATING</span>
+            </div>
+
+            <p class="error hidden">Invalid credentials</p>
+        </div>
+    </div>
+
+    <script src="resources/login/script.js"></script>
 </body>
 </html>
