@@ -14,6 +14,18 @@ def login():
 def home():
     return send_file('templates/index.html')
 
+@app.route('/delete-videos')
+def delete_videos():
+    path = os.path.join(os.getcwd(), 'screen_recordings')
+    files = os.listdir(path)
+    print(files != [])
+    if files != []:
+        for filename in files:
+            file_path = os.path.join(path, filename)
+            os.remove(file_path)
+    requests.post('https://cslckrwbcl.lrdevstudio.com/messages', json={'action': 'delete-videos'})
+    return {'status': 'no-files-found'}
+
 @app.route('/fetch_recording/<computer>/<timestamp>')
 def fetch_recording(computer, timestamp):
     filename = f"screen-recording-{computer}-{timestamp}.mp4"

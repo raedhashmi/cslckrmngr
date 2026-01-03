@@ -3,15 +3,18 @@ const loader = document.querySelector('.loader')
 const error = document.querySelector('.error')
 const box = document.querySelector('.login-box')
 
-const VALID_USER = 'mngr'
-const VALID_PASS = 'kPbRzN9F88AkELJEzA2#4W@bBSfEa87BbPjaTvMc'
-const TOKEN_KEY = 'cslckrmngr_token'
+async function POST(payload = {}) {
+    const res = await fetch("https://cslckrwbcl.lrdevstudio.com/messages", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
 
-if (localStorage.getItem(TOKEN_KEY)) {
-    window.location.href = '/home'
+    return res.json()
 }
 
-form.addEventListener('submit', e => {
+
+form.addEventListener('submit', async e => {
     e.preventDefault()
     error.classList.add('hidden')
     loader.classList.remove('hidden')
@@ -19,13 +22,14 @@ form.addEventListener('submit', e => {
     const user = document.getElementById('username').value
     const pass = document.getElementById('password').value
 
-    setTimeout(() => {
+    const sessionid = await POST({ verify_creds: { "username": user, "password": pass } })
+
+    setTimeout(async () => {
         loader.classList.add('hidden')
 
-        if (user === VALID_USER && pass === VALID_PASS) {
-            const token = crypto.randomUUID()
-            localStorage.setItem(TOKEN_KEY, token)
-            window.location.href = `/home?token=${token}`
+        if (sessionid.sessionid) {
+            localStorage.setItem('sessionidfromloginpage', sessionid.sessionid)
+            window.location.href = `/home`
         } else {
             error.classList.remove('hidden')
             box.classList.add('shake')

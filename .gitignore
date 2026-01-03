@@ -1,1 +1,3 @@
 .venv
+screen_recordings/*.mp4
+.vscode
