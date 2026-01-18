@@ -1,10 +1,15 @@
+const skipBootToggle = document.querySelector('.skip-boot-toggle input');
+const settingsOverlay = document.querySelector('.settings-overlay');
 let computerItems = document.querySelectorAll('.computer-list li');
+const toggleSettings = document.querySelector('.toggle-settings');
 const computerList = document.querySelector('.computer-list');
 const displayArea = document.querySelector('.display-area');
 const displayText = document.querySelector('.display-text');
 const displayBox = document.querySelector('.display-box');
+const settings = document.querySelector('.settings');
 const options = document.querySelector('.options');
 const loader = document.querySelector('.loader');
+const noPcs = document.querySelector('.no-pcs');
 const logs = document.querySelector('.logs');
 const menu = document.querySelector('.menu');
 const log = document.querySelector('.log');
@@ -80,19 +85,15 @@ async function POST(payload = {}) {
 }
 
 async function auth() {
-    const sessionid = localStorage.getItem('sessionidfromloginpage')
+    const res = await POST({check_session})
+    // const res = JSON.parse('{"sessionid": "e8003101-91ae-4c4c-b987-ee5ae39e2263", "remaining": 7200}')
 
-    if (!sessionid && localStorage.getItem('loggedIn') == null) { location.href = '/'; return }
-
-    const res = await POST({
-        check_session: sessionid
-    })
+    if (JSON.stringify(res).includes('no-session')) { window.location.href = '/'; return }
 
     terminal()
     terminal.success('Validated login')
     terminal.warn(`Session expires in loading...`, { className: 'time' });
     startSessionTimer(res.remaining);
-    localStorage.setItem('loggedIn', 'true')
 
     await refreshPCList()
 
@@ -130,33 +131,56 @@ function startSessionTimer(totalSeconds) {
     }, 1000);
 }
 
-
 async function refreshPCList() {
     let all_computers = 'all_computers'
     const computers = await POST({ all_computers })
+    
+    function autoRefreshChecker() {
+        if (localStorage.getItem('autoRefresh') == 'true') {
+            setInterval(() => {
+                refreshPCList()
+            }, Number(localStorage.getItem('refreshInterval')) * 1000)
+        }
+    }
 
-    if (computers == '') { terminal.warn('No PCs found.'); return }
+    if (computers == '') { 
+        terminal.warn('No PCs found.');
+        autoRefreshChecker()
+        return
+    }
 
     computerList.innerHTML = computers
         .map(c => `<li>${c}</li>`)
         .join('')
 
     computerItems = document.querySelectorAll('.computer-list li')
-    terminal.log('Loaded computers.')
+    terminal.log('Loaded computers.')  
+
+    autoRefreshChecker()
 }
 
 auth();
 
-setTimeout(() => {
-    loader.style.animation = 'fade-out 1s ease-in-out';
+if (localStorage.getItem('skipBoot') == 'false' || localStorage.getItem('skipBoot') == null) {
+    setTimeout(() => {
+        loader.style.animation = 'fade-out 1s ease-in-out';
 
-    setTimeout(async () => {
-        loader.style.display = 'none';
-        menu.style.display = 'flex';
-        menu.style.animation = 'fade-in 1s ease-in-out';
-    }, 1000);
+        setTimeout(() => {
+            loader.style.display = 'none';
+            menu.style.display = 'flex';
+            menu.style.animation = 'fade-in 1s ease-in-out';
+        }, 1000);
 
-}, 1000);
+    }, 2000);
+} else if (localStorage.getItem('skipBoot') == 'true') {
+    loader.style.display = 'none';
+    menu.style.display = 'flex';
+    menu.style.animation = 'fade-in .2s ease-in-out';
+}
+
+if (localStorage.getItem('flicker') == 'true') {
+    noPcs.style.animation = "flicker 1.5s infinite alternate"
+}
 
 (async () => {
     function enableMenuButtons() {
@@ -217,6 +241,96 @@ setTimeout(() => {
 
         optionsMenu.classList.toggle('show')
         options.classList.toggle('active')
+    })
+
+    function closeSettingsMenu() {
+        settingsOverlay.classList.remove('show')
+        toggleSettings.classList.remove('active')
+    }
+
+    toggleSettings.addEventListener('click', e => {
+        e.stopPropagation()
+        settingsOverlay.classList.toggle('show')
+        toggleSettings.classList.toggle('active')
+
+        document.querySelectorAll('[data-setting]').forEach(el => {
+            const key = el.dataset.setting
+
+            if (el.type === 'checkbox') {
+                el.checked = localStorage.getItem(key) === 'true'
+                el.addEventListener('change', () => {
+                    localStorage.setItem(key, el.checked)
+                    updateConditionalSettings()
+                })
+            } else {
+                el.value = localStorage.getItem(key) || 30
+                el.addEventListener('input', () => {
+                    localStorage.setItem(key, el.value)
+                })
+            }
+        })
+
+        function updateConditionalSettings() {
+            const autoRefresh = localStorage.getItem('autoRefresh') === 'true'
+            document.querySelector('.interval').classList.toggle('hidden', !autoRefresh)
+        }
+
+        updateConditionalSettings()
+
+        document.querySelector('.ping-server').addEventListener('click', async () => {
+            closeSettingsMenu()
+            terminal.log('Pinging server (0s)', { className: 'ping-timer' })
+
+            let timedOut = false
+            let time = 0
+
+            const timeout = setTimeout(() => {
+                timedOut = true
+                terminal.error('Server offline')
+            }, 60000)
+
+            const elapsed = setInterval(() => {
+                document.querySelector('.ping-timer').innerHTML = `[LOG] Pinging server (${time}s)`
+                time++
+            }, 1000)
+
+            try {
+                const res = await POST({ data: 'ping' })
+
+                if (timedOut) return
+
+                clearTimeout(timeout)
+                clearInterval(elapsed)
+                terminal.success(`Server responded with: ${JSON.stringify(res)}`)
+            } catch (e) {
+                if (timedOut) return
+                clearTimeout(timeout)
+                terminal.error('Server offline')
+            }
+        })
+
+        document.querySelector('.remove-all-pcs').addEventListener('click', async () => {
+            openPopup('Please type in "YES" to confirm!', 'Delete all Computers', 'text', async () => {
+                await POST({'action': 'delete_all_computers'})
+                terminal.log('All computers removed')
+            })
+        })
+
+        document.querySelector('.logout').addEventListener('click', () => {
+            localStorage.clear()
+            location.href = '/'
+        })
+
+    })
+
+    settingsOverlay.addEventListener('click', e => {
+        if (e.target === settingsOverlay) {
+            closeSettingsMenu()
+        }
+    })
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeSettingsMenu()
     })
 
     document.addEventListener('click', e => {

@@ -1,13 +1,14 @@
-body { 
+body {
     margin: 0;
+    width: 100wh;
     height: 100vh;
     background: #0f0f0f;
     color: #ffffff;
-    font-family: Inter,Segoe UI,Roboto,Arial,sans-serif;
+    font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
     overflow: hidden;
 }
 
-.loader { 
+.loader {
     position: fixed;
     inset: 0;
     display: flex;
@@ -68,21 +69,209 @@ body {
 }
 
 .sidebar h2  { 
+    display: flex;
     font-size: 20px;
     margin: 0 0 16px;
     padding-bottom: 12px;
+    justify-content: space-between;
     border-bottom: 1px solid #c2580280;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-.computer-list  { 
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.toggle-settings {
+    font-weight: normal;
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 16px;
+    margin-left: auto;
+    color: #ffffff;
+    cursor: pointer;
+    border: 1px solid #c2580220;
+    border-radius: 9px;
+}
+
+.toggle-settings:hover {
+    background: #c2580225;
+}
+
+.toggle-settings.active {
+    background: #c2580280;
+    border: 1px solid #c25802;
+}
+
+.settings-overlay {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0;
+    background-color: #00000010;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    pointer-events: none;
+    transition: opacity .2s ease-in-out;
+    z-index: 99998;
+}
+
+.settings-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+    animation: fade-in .2s ease-in;
+}
+
+.settings {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 400px;
+    background: #1a1a1a;
+    border: 1px solid #c2580280;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    z-index: 99999;
+}
+
+.settings-title {
+    margin: 0 0 14px;
+    font-size: 16px; 
+    letter-spacing: 4px;
+    color: #c25802;
+    border-bottom: 1px solid #c2580280;
+    padding-bottom: 10px;
+}
+
+.settings-section {
     display: flex;
     flex-direction: column;
+    gap: 12px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #141414;
+    border: 1px solid #c2580225;
+    border-radius: 8px;
+}
+
+.setting-item input[type="number"] {
+    width: 80px;
+    background: #0f0f0f;
+    color: #ffffff;
+    border: 1px solid #c2580280;
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+.setting-label {
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #9a9a9a;
+    transition: .4s;
+    border-radius: 34px;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: #c25802;
+    box-shadow: 0 0 6px #c25802;
+}
+
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(18px);
+}
+
+.settings-divider {
+    margin: 16px 0;
+    height: 1px;
+    background: #c2580225;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.settings-btn {
+    flex: 1;
+    padding: 8px;
+    background: #1a1a1a;
+    border: 1px solid #c2580280;
+    color: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.settings-btn:hover {
+    background: #c2580225;
+}
+
+.settings-btn.danger {
+    border-color: #be0000;
+    color: #be0000;
+}
+
+.settings-btn.logout {
+    border-color: #c25802;
+    color: #c25802;
+}
+
+.hidden {
+    display: none;
+}
+
+.computer-list  { 
+    display: flex;
+    position: relative;
+    list-style: none;
     gap: 8px;
+    padding: 0;
+    margin: 0;
+    flex-direction: column;
 }
 
 .computer-list li  {
@@ -104,6 +293,19 @@ body {
 .computer-list li.active  { 
     background: #c2580225;
     border-color: #c25802;
+}
+
+.no-pcs {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 500%);
+    font-size: 24px;
+    font-weight: bold;
+    justify-self: center; 
+    align-self: center;
+    color: #c25802;
+    letter-spacing: 3px;
 }
 
 .display-area  { 
@@ -196,26 +398,23 @@ body {
     right: 20;
     width: 10%;
     height: fit-content;
-    visibility: hidden;
     padding: 6px;
+    opacity: 0;
     flex-direction: column;
     color: #ffffff;
     background-color: #1a1a1a;
-    transform: scale(.95);
     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     border: 1px solid #c2580280;
     border-radius: 8px;
-    z-index: 9999;
+    transition: opacity .2s ease-in-out;
     pointer-events: none;
-    transition: .15s ease;
-    animation: fade-out .1s ease;
+    z-index: 9999;
 }
 
 .options-menu.show {
-    visibility: visible;
-    transform: scale(1);
+    opacity: 1;
+    animation: fade-in .2s ease-in;
     pointer-events: auto;
-    animation: fade-in .1s ease;
 }
 
 .options-menu-button {
@@ -260,10 +459,13 @@ body {
 .popup-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background-color: #00000010;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: fade-in .2s ease-out;
     z-index: 99999;
 }
 
@@ -366,6 +568,16 @@ body {
     from  { 
         opacity: 1;
     } to  { 
+        opacity: 1;
+    }
+}
+
+@keyframes flicker {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        opacity: 1;
+    } 20%, 24%, 55% { 
+        opacity: 0.7;
+    } 100% {
         opacity: 1;
     }
 }

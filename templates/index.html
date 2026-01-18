@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="resources/favicon.ico" type="image/x-icon">
+    <link class='favicon' rel="shortcut icon" href="resources/favicon.ico" type="image/ico">
     <link rel="stylesheet" href="resources/styles.css">
     <title>cslckrmngr</title>
 </head>
@@ -11,7 +11,7 @@
     <div class="loader">
         <div class="boot-ring"></div>
         <div class="boot-text">
-            <span>INITIALIZING</span>
+            <span>BOOTING</span>
             <span class="title">cslckrmngr</span>
         </div>
     </div>
@@ -19,9 +19,9 @@
 
     <div class="menu">
         <aside class="sidebar">
-            <h2>Computers</h2>
+            <h2>Computers <span class="toggle-settings">≡</span></h2>
             <ul class="computer-list" aria-live="polite">
-            
+                <span class='no-pcs'>NO PCS</span>
             </ul>
         </aside>
 
@@ -35,6 +35,53 @@
                     
                 <div class="log">
                     
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-overlay">
+            <div class="settings">
+                <h1 class="settings-title">SETTINGS</h1>
+
+                <div class="settings-section">
+
+                    <div class="setting-item">
+                        <span class="setting-label">Boot Screen</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" data-setting="skipBoot">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <span class="setting-label">Flickering Effects</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" data-setting="flicker">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <span class="setting-label">Auto Refresh PC List</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" data-setting="autoRefresh">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item interval hidden">
+                        <span class="setting-label">Refresh Interval (seconds)</span>
+                        <input type="number" min="5" max="300" step="5" data-setting="refreshInterval">
+                    </div>
+
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-actions">
+                    <button class="settings-btn ping-server">Ping Server</button>
+                    <button class="settings-btn remove-all-pcs danger">Remove All Computers</button>
+                    <button class="settings-btn logout">Logout</button>
                 </div>
             </div>
         </div>

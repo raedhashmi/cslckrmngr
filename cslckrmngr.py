@@ -6,6 +6,8 @@ app = Flask(__name__)
 SAVE_DIR = 'screen_recordings'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
+sessionid = ''
+
 @app.route('/')
 def login():
     return send_file('templates/login/login.html')
@@ -59,4 +61,4 @@ def serve_recording(filename):
     return send_file(f'{SAVE_DIR}/{filename}')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8004)
+    app.run(host='0.0.0.0', port=8002, debug=True)

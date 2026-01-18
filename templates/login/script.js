@@ -23,12 +23,16 @@ form.addEventListener('submit', async e => {
     const pass = document.getElementById('password').value
 
     const sessionid = await POST({ verify_creds: { "username": user, "password": pass } })
+    loader.querySelector('span').innerText = 'TALKING TO SERVER'
 
     setTimeout(async () => {
         loader.classList.add('hidden')
 
         if (sessionid.sessionid) {
-            localStorage.setItem('sessionidfromloginpage', sessionid.sessionid)
+            localStorage.setItem('autoRefresh', 'false')
+            localStorage.setItem('bootScreen', 'true')
+            localStorage.setItem('flicker', 'true')
+            localStorage.setItem('autoRefresh', 'false')
             window.location.href = `/home`
         } else {
             error.classList.remove('hidden')
