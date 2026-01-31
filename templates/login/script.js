@@ -30,7 +30,7 @@ form.addEventListener('submit', async e => {
 
         if (sessionid.sessionid) {
             localStorage.setItem('autoRefresh', 'false')
-            localStorage.setItem('bootScreen', 'true')
+            localStorage.setItem('skipBoot', 'false')
             localStorage.setItem('flicker', 'true')
             localStorage.setItem('autoRefresh', 'false')
             window.location.href = `/home`

